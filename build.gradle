@@ -1,0 +1,105 @@
+import grails.util.Environment
+buildscript {
+    ext {
+        grailsVersion = project.grailsVersion
+    }
+    repositories {
+        mavenLocal()
+        maven { url "https://repo.grails.org/grails/core" }
+    }
+    dependencies {        
+        classpath "org.grails:grails-gradle-plugin:$grailsVersion"
+        classpath 'com.bertramlabs.plugins:asset-pipeline-gradle:2.5.0'
+        classpath "org.grails.plugins:hibernate:4.3.10.7"
+        classpath 'org.postgresql:postgresql:9.4-1206-jdbc41'       //https://jdbc.postgresql.org/documentation/changelog.html
+    }
+}
+
+plugins {
+    id "io.spring.dependency-management" version "0.5.2.RELEASE"
+}
+
+version "0.1"
+group "jsonbupdate"
+
+apply plugin: "spring-boot"
+apply plugin: "war"
+apply plugin: "asset-pipeline"
+
+if(Environment.current != Environment.PRODUCTION) {
+    apply plugin: 'idea'
+    apply plugin: 'eclipse'
+}
+
+apply plugin: "org.grails.grails-web"
+apply plugin: "org.grails.grails-gsp"
+
+ext {
+    grailsVersion = project.grailsVersion
+    gradleWrapperVersion = project.gradleWrapperVersion
+}
+
+assets {
+    minifyJs = true
+    minifyCss = true
+}
+
+repositories {
+    mavenLocal()
+    maven { url "https://repo.grails.org/grails/core" }
+}
+
+dependencyManagement {
+    imports {
+        mavenBom "org.grails:grails-bom:$grailsVersion"
+    }
+    applyMavenExclusions false
+}
+
+dependencies {
+    compile "org.springframework.boot:spring-boot-starter-logging"
+    compile "org.springframework.boot:spring-boot-starter-actuator"
+    compile "org.springframework.boot:spring-boot-autoconfigure"
+    compile "org.springframework.boot:spring-boot-starter-tomcat"
+    compile "org.grails:grails-dependencies"
+    compile "org.grails:grails-web-boot"
+
+    compile "org.grails.plugins:hibernate"
+    compile "org.grails.plugins:cache"
+    compile "org.hibernate:hibernate-ehcache"
+    compile "org.grails.plugins:scaffolding"
+
+    runtime "org.grails.plugins:asset-pipeline"
+
+    provided 'org.postgresql:postgresql:9.4-1206-jdbc41'         //https://jdbc.postgresql.org/documentation/changelog.html
+    compile 'org.grails.plugins:postgresql-extensions:4.6.5'
+
+    runtime "org.grails.plugins:database-migration:2.0.0.RC1"   //https://github.com/grails-plugins/grails-database-migration
+
+    if (Environment.current == Environment.TEST) {
+
+        testCompile "org.grails:grails-plugin-testing"
+        testCompile "org.grails.plugins:geb"
+
+        // Note: It is recommended to update to a more robust driver (Chrome, Firefox etc.)
+        testRuntime 'org.seleniumhq.selenium:selenium-htmlunit-driver:2.44.0'
+
+    } else if (Environment.current == Environment.DEVELOPMENT) {
+
+        console "org.grails:grails-console"
+    }
+
+}
+
+sourceSets {
+    main {
+        resources {
+            srcDir 'grails-app/migrations'
+            srcDir 'key'
+        }
+    }
+}
+
+task wrapper(type: Wrapper) {
+    gradleVersion = gradleWrapperVersion
+}
